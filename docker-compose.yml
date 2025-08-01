@@ -1,0 +1,17 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - type: bind
+        source: ./weather_data.db
+        target: /app/weather_data.db
+        read_only: false
+    environment:
+      - FLASK_ENV=development
+    user: "1000:1000"

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Weather App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.12/css/weather-icons.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .weather-container {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .search-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        input, select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            grid-column: span 2;
+        }
+        .current-weather {
+            text-align: center;
+            padding: 20px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .county-comparison {
+            text-align: center;
+            padding: 20px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+        .forecast-day {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .forecast-periods {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .forecast-period {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .error-message {
+            color: white;
+            background: #e53935;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        @media (max-width: 600px) {
+            .search-form {
+                grid-template-columns: 1fr;
+            }
+            .forecast-periods {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="weather-container">
+        <h1 style="text-align: center;">County Average Weather App</h1>
+
+        <form method="POST" class="search-form">
+            <input type="text" name="city" placeholder="City" required value="{{ request.form.city or 'New York' }}">
+            <input type="text" name="state" placeholder="State/Province (optional)" value="{{ request.form.state }}">
+            <input type="text" name="country" placeholder="Country (default: US)" value="{{ request.form.country or 'US' }}">
+            <select name="unit">
+                <option value="fahrenheit" {% if unit == 'fahrenheit' %}selected{% endif %}>Fahrenheit</option>
+                <option value="celsius" {% if unit == 'celsius' %}selected{% endif %}>Celsius</option>
+            </select>
+            <button type="submit">Get Weather</button>
+        </form>
+
+        {% if error %}
+            <div class="error-message">{{ error }}</div>
+        {% endif %}
+
+        {% if weather %}
+            <div class="current-weather">
+                <h2>
+                    {{ weather.city }}
+                    {% if weather.state %}, {{ weather.state }}{% endif %}
+                    {% if weather.country %}, {{ weather.country }}{% endif %}
+                </h2>
+                <div><i class="wi {{ weather.icon }}" style="font-size: 4em;"></i></div>
+                <div style="font-size: 3em; font-weight: bold;">{{ weather.temp|round(1) }}°</div>
+                <div style="font-size: 1.2em; margin: 10px 0;">{{ weather.description }}</div>
+                <div>Humidity: {{ weather.humidity }}%</div>
+                <div>Wind: {{ weather.wind|round(1) }} {{ 'mph' if unit == 'fahrenheit' else 'm/s' }}</div>
+            </div>
+        {% endif %}
+
+
+        {% if weather.county_comparison %}
+            <div class="county-comparison">
+                <h2>County Avg. Temperature Comparison</h2>
+                <p style="font-weight: bold;">Historical monthly average(1981-2011) for {{ weather.county_comparison.county }} county:
+                {{ weather.county_comparison.historical_avg }}°{{ weather.county_comparison.unit|first|upper }}</p>
+                <p style="font-weight: bold;">Currently {{ weather.county_comparison.difference_abs }}°{{ weather.county_comparison.unit|first|upper }}
+                {% if weather.county_comparison.is_higher %}warmer{% else %}cooler{% endif %}
+                than average</p>
+            </div>
+        {% endif %}
+
+        {% if forecast %}
+            <h3>5-Day Forecast</h3>
+            {% for day in forecast %}
+                {% if day and day.time_periods %}
+                    <div class="forecast-day">
+                        <h4>{{ day.day_name }}</h4>
+                        <div class="forecast-periods">
+                            {% for period in day.time_periods %}
+                                <div class="forecast-period">
+                                    <div>{{ period.time }}</div>
+                                    <div><i class="wi {{ period.icon }}"></i></div>
+                                    <div style="font-weight: bold;">{{ period.temp|round(1) }}°</div>
+                                    <div>{{ period.description }}</div>
+                                    <div style="font-size: 0.9em;">Humidity: {{ period.humidity }}%</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</body>
+</html>
