@@ -10,21 +10,16 @@ A weather app running in Docker containers.
    cd weather-app
 
 2. Copy the example environment file:
+   '''bash
    cp .env.example .env
 
-3. Start the app:
+4. Start the app:
+   '''bash
    docker-compose up -d
 
-4. Open in your browser:
+6. Open in your browser:
+   '''bash
    http://localhost:5000
-
-## Project Files
-
-weather-app/
-├── app/              # Python/Flask code
-├── docker-compose.yml
-├── Dockerfile
-└── README.md
 
 ## Setup
 
